@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2008-2009 Google Inc.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
-
 package com.bfl.squarekeyboard;
 
 import android.inputmethodservice.InputMethodService;
@@ -40,7 +24,7 @@ import java.util.List;
  * be fleshed out as appropriate.
  */
 public class SquareKeyboard extends InputMethodService 
-        implements KeyboardView.OnKeyboardActionListener {
+        implements SquareKeyboardView.ActionListener {
     static final boolean DEBUG = false;
     
     /**
@@ -55,11 +39,7 @@ public class SquareKeyboard extends InputMethodService
     
     private SquareKeyboardView mView;
     private CandidateView mCandidateView;
-    private CompletionInfo[] mCompletions;
     
-    private StringBuilder mComposing = new StringBuilder();
-    private boolean mPredictionOn;
-    private boolean mCompletionOn;
     private int mLastDisplayWidth;
     private long mLastShiftTime;
     private long mMetaState;
@@ -100,9 +80,7 @@ public class SquareKeyboard extends InputMethodService
      * be generated, like {@link #onCreateInputView}.
      */
     @Override public View onCreateCandidatesView() {
-        mCandidateView = new CandidateView(this);
-        mCandidateView.setService(this);
-        return mCandidateView;
+        return null;
     }
 
     /**
@@ -116,17 +94,12 @@ public class SquareKeyboard extends InputMethodService
         
         // Reset our state.  We want to do this even if restarting, because
         // the underlying state of the text editor could have changed in any way.
-        mComposing.setLength(0);
-        updateCandidates();
         
         if (!restarting) {
             // Clear shift states.
             mMetaState = 0; // FIXME
         }
         
-        mPredictionOn = false;
-        mCompletionOn = false;
-        mCompletions = null;
         
         
         // We are now going to initialize our state based on the type of
@@ -151,7 +124,7 @@ public class SquareKeyboard extends InputMethodService
                 // be doing predictive text (showing candidates as the
                 // user types).
                 //mCurKeyboard = mQwertyKeyboard;
-                mPredictionOn = true;
+                //mPredictionOn = true;
                 
                 // We now look for a few special variations of text that will
                 // modify our behavior.
@@ -160,7 +133,7 @@ public class SquareKeyboard extends InputMethodService
                         variation == EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
                     // Do not display predictions / what the user is typing
                     // when they are entering a password.
-                    mPredictionOn = false;
+                    //mPredictionOn = false;
                 }
                 
                 if (variation == EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS 
@@ -168,7 +141,7 @@ public class SquareKeyboard extends InputMethodService
                         || variation == EditorInfo.TYPE_TEXT_VARIATION_FILTER) {
                     // Our predictions are not useful for e-mail addresses
                     // or URIs.
-                    mPredictionOn = false;
+                    //mPredictionOn = false;
                 }
                 
                 if ((attribute.inputType&EditorInfo.TYPE_TEXT_FLAG_AUTO_COMPLETE) != 0) {
@@ -177,8 +150,8 @@ public class SquareKeyboard extends InputMethodService
                     // to supply their own.  We only show the editor's
                     // candidates when in fullscreen mode, otherwise relying
                     // own it displaying its own UI.
-                    mPredictionOn = false;
-                    mCompletionOn = isFullscreenMode();
+                    //mPredictionOn = false;
+                    //mCompletionOn = isFullscreenMode();
                 }
                 
                 // We also want to look at the current state of the editor
@@ -207,8 +180,6 @@ public class SquareKeyboard extends InputMethodService
         super.onFinishInput();
         
         // Clear current composing text and candidates.
-        mComposing.setLength(0);
-        updateCandidates();
         
         // We only hide the candidates window when finishing input on
         // a particular editor, to avoid popping the underlying application
@@ -240,15 +211,6 @@ public class SquareKeyboard extends InputMethodService
         
         // If the current selection in the text view changes, we should
         // clear whatever candidate text we have.
-        if (mComposing.length() > 0 && (newSelStart != candidatesEnd
-                || newSelEnd != candidatesEnd)) {
-            mComposing.setLength(0);
-            updateCandidates();
-            InputConnection ic = getCurrentInputConnection();
-            if (ic != null) {
-                ic.finishComposingText();
-            }
-        }
     }
 
     /**
@@ -258,58 +220,8 @@ public class SquareKeyboard extends InputMethodService
      * in that situation.
      */
     @Override public void onDisplayCompletions(CompletionInfo[] completions) {
-        if (mCompletionOn) {
-            mCompletions = completions;
-            if (completions == null) {
-                setSuggestions(null, false, false);
-                return;
-            }
-            
-            List<String> stringList = new ArrayList<String>();
-            for (int i=0; i<(completions != null ? completions.length : 0); i++) {
-                CompletionInfo ci = completions[i];
-                if (ci != null) stringList.add(ci.getText().toString());
-            }
-            setSuggestions(stringList, true, true);
-        }
     }
     
-    /**
-     * This translates incoming hard key events in to edit operations on an
-     * InputConnection.  It is only needed when using the
-     * PROCESS_HARD_KEYS option.
-     */
-    private boolean translateKeyDown(int keyCode, KeyEvent event) {
-        mMetaState = MetaKeyKeyListener.handleKeyDown(mMetaState,
-                keyCode, event);
-        int c = event.getUnicodeChar(MetaKeyKeyListener.getMetaState(mMetaState));
-        mMetaState = MetaKeyKeyListener.adjustMetaAfterKeypress(mMetaState);
-        InputConnection ic = getCurrentInputConnection();
-        if (c == 0 || ic == null) {
-            return false;
-        }
-        
-        boolean dead = false;
-
-        if ((c & KeyCharacterMap.COMBINING_ACCENT) != 0) {
-            dead = true;
-            c = c & KeyCharacterMap.COMBINING_ACCENT_MASK;
-        }
-        
-        if (mComposing.length() > 0) {
-            char accent = mComposing.charAt(mComposing.length() -1 );
-            int composed = KeyEvent.getDeadChar(accent, c);
-
-            if (composed != 0) {
-                c = composed;
-                mComposing.setLength(mComposing.length()-1);
-            }
-        }
-        
-        onKey(c, null);
-        
-        return true;
-    }
     
     /**
      * Use this to monitor key events being delivered to the application.
@@ -334,10 +246,6 @@ public class SquareKeyboard extends InputMethodService
                 // Special handling of the delete key: if we currently are
                 // composing text for the user, we want to modify that instead
                 // of let the application to the delete itself.
-                if (mComposing.length() > 0) {
-                    onKey(Keyboard.KEYCODE_DELETE, null);
-                    return true;
-                }
                 break;
                 
             case KeyEvent.KEYCODE_ENTER:
@@ -363,26 +271,10 @@ public class SquareKeyboard extends InputMethodService
         // If we want to do transformations on text being entered with a hard
         // keyboard, we need to process the up events to update the meta key
         // state we are tracking.
-        if (PROCESS_HARD_KEYS) {
-            if (mPredictionOn) {
-                mMetaState = MetaKeyKeyListener.handleKeyUp(mMetaState,
-                        keyCode, event);
-            }
-        }
         
         return super.onKeyUp(keyCode, event);
     }
 
-    /**
-     * Helper function to commit any text being composed in to the editor.
-     */
-    private void commitTyped(InputConnection inputConnection) {
-        if (mComposing.length() > 0) {
-            inputConnection.commitText(mComposing, mComposing.length());
-            mComposing.setLength(0);
-            updateCandidates();
-        }
-    }
 
     /**
      * Helper to update the shift state of our keyboard based on the initial
@@ -425,6 +317,7 @@ public class SquareKeyboard extends InputMethodService
     /**
      * Helper to send a character to the editor as raw key events.
      */
+    // DEPRECATED
     private void sendKey(int keyCode) {
         switch (keyCode) {
             case '\n':
@@ -440,53 +333,23 @@ public class SquareKeyboard extends InputMethodService
         }
     }
 
-    // Implementation of KeyboardViewListener
+    //  actions from SquareKeyboardView
 
-    public void onKey(int primaryCode, int[] keyCodes) {
-        if (isWordSeparator(primaryCode)) {
-            // Handle separator
-            if (mComposing.length() > 0) {
-                commitTyped(getCurrentInputConnection());
-            }
-            sendKey(primaryCode);
-        } else if (primaryCode == Keyboard.KEYCODE_DELETE) {
-            handleBackspace();
-        } else if (primaryCode == Keyboard.KEYCODE_CANCEL) {
-            handleClose();
-            return;
-        } else if (primaryCode == LatinKeyboardView.KEYCODE_OPTIONS) {
-            // Show a menu or somethin'
-        } else {
-            handleCharacter(primaryCode, keyCodes);
-        }
+    public void onKey(char ch) {
+            getCurrentInputConnection().commitText(
+                    String.valueOf(ch), 1);
     }
 
     public void onText(CharSequence text) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
         ic.beginBatchEdit();
-        if (mComposing.length() > 0) {
-            commitTyped(ic);
-        }
         ic.commitText(text, 0);
         ic.endBatchEdit();
     }
 
-    /**
-     * Update the list of available candidates from the current composing
-     * text.  This will need to be filled in by however you are determining
-     * candidates.
-     */
-    private void updateCandidates() {
-        if (!mCompletionOn) {
-            if (mComposing.length() > 0) {
-                ArrayList<String> list = new ArrayList<String>();
-                list.add(mComposing.toString());
-                setSuggestions(list, true, true);
-            } else {
-                setSuggestions(null, false, false);
-            }
-        }
+    public void onSpecialKey(int keyCode, KeyEvent event) {
+        // handle backspace etc here
     }
     
     public void setSuggestions(List<String> suggestions, boolean completions,
@@ -501,87 +364,11 @@ public class SquareKeyboard extends InputMethodService
         }
     }
     
-    private void handleBackspace() {
-        final int length = mComposing.length();
-        if (length > 1) {
-            mComposing.delete(length - 1, length);
-            getCurrentInputConnection().setComposingText(mComposing, 1);
-            updateCandidates();
-        } else if (length > 0) {
-            mComposing.setLength(0);
-            getCurrentInputConnection().commitText("", 0);
-            updateCandidates();
-        } else {
-            keyDownUp(KeyEvent.KEYCODE_DEL);
-        }
-    }
-
-    private void handleCharacter(int primaryCode, int[] keyCodes) {
-        if (isAlphabet(primaryCode) && mPredictionOn) {
-            mComposing.append((char) primaryCode);
-            getCurrentInputConnection().setComposingText(mComposing, 1);
-            updateCandidates();
-        } else {
-            getCurrentInputConnection().commitText(
-                    String.valueOf((char) primaryCode), 1);
-        }
-    }
-
     private void handleClose() {
-        commitTyped(getCurrentInputConnection());
         requestHideSelf(0);
         //mInputView.closing();
     }
 
-    private String getWordSeparators() {
-        return mWordSeparators;
-    }
     
-    public boolean isWordSeparator(int code) {
-        String separators = getWordSeparators();
-        return separators.contains(String.valueOf((char)code));
-    }
-
-    public void pickDefaultCandidate() {
-        pickSuggestionManually(0);
-    }
     
-    public void pickSuggestionManually(int index) {
-        if (mCompletionOn && mCompletions != null && index >= 0
-                && index < mCompletions.length) {
-            CompletionInfo ci = mCompletions[index];
-            getCurrentInputConnection().commitCompletion(ci);
-            if (mCandidateView != null) {
-                mCandidateView.clear();
-            }
-        } else if (mComposing.length() > 0) {
-            // If we were generating candidate suggestions for the current
-            // text, we would commit one of them here.  But for this sample,
-            // we will just commit the current text.
-            commitTyped(getCurrentInputConnection());
-        }
-    }
-    
-    public void swipeRight() {
-        if (mCompletionOn) {
-            pickDefaultCandidate();
-        }
-    }
-    
-    public void swipeLeft() {
-        handleBackspace();
-    }
-
-    public void swipeDown() {
-        handleClose();
-    }
-
-    public void swipeUp() {
-    }
-    
-    public void onPress(int primaryCode) {
-    }
-    
-    public void onRelease(int primaryCode) {
-    }
 }
