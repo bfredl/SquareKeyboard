@@ -1,0 +1,9 @@
+.*.swp
+build.xml
+project.properties
+local.properties
+bin
+gen
+.classpath
+.project
+s

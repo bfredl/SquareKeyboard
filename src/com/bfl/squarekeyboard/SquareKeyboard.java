@@ -38,7 +38,6 @@ public class SquareKeyboard extends InputMethodService
     static final boolean PROCESS_HARD_KEYS = true;
     
     private SquareKeyboardView mView;
-    private CandidateView mCandidateView;
     
     private int mLastDisplayWidth;
     private long mLastShiftTime;
@@ -358,9 +357,6 @@ public class SquareKeyboard extends InputMethodService
             setCandidatesViewShown(true);
         } else if (isExtractViewShown()) {
             setCandidatesViewShown(true);
-        }
-        if (mCandidateView != null) {
-            mCandidateView.setSuggestions(suggestions, completions, typedWordValid);
         }
     }
     
