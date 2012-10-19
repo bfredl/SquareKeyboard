@@ -2,6 +2,7 @@ package com.bfl.squarekeyboard;
 import android.view.View;
 import android.view.View;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.graphics.*;
@@ -108,6 +109,33 @@ public class SquareKeyboardView extends View {
         }
         mCanvas.drawLine(mWidth-1,0,mWidth-1,mHeight,mBorderPaint);
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        int a = ev.getActionMasked();
+        String action;
+        if( a == ev.ACTION_DOWN) {
+            action  = "DOWN";
+            mStartX = ev.getX();
+            mStartY = ev.getY();
+            onMovePos(ev.getX(),ev.getY());
+        } else if(a == ev.ACTION_MOVE) {
+            action = "MOVE";
+            onMovePos(ev.getX(),ev.getY());
+        } else if(a == ev.ACTION_UP) {
+            action = "UP";
+        } else if(a == ev.ACTION_CANCEL) {
+            action = "CANCEL";
+        } else if(a == ev.ACTION_OUTSIDE) {
+            action = "OUTSIDE";
+        } else {
+            return false;
+        }
+
+        Log.d(TAG, "touch " + action + " " + ev.getX() + " " + ev.getY());
+        return true;
+    }
+
 
     public interface ActionListener {
         void onKey(char ch);
