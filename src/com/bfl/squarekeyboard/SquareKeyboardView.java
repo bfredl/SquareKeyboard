@@ -11,8 +11,9 @@ import android.util.Log;
 public class SquareKeyboardView extends View {
 
     private final String TAG = "SquareKeyboardView";
+    SquareKeyboard mKeyboard;
     int mRows, mCols;
-    int mRowHeight;
+    int mRowHeight, mColWidth;
     int mLineThickness = 1;
 
     int mWidth, mHeight;
@@ -39,8 +40,8 @@ public class SquareKeyboardView extends View {
     }
     
     private void construct() {
-        mRows = 5;
-        mCols = 10;
+        mRows = 1;
+        mCols = 1;
         mRowHeight = 30;
 
         mPaint = new Paint();
@@ -53,6 +54,16 @@ public class SquareKeyboardView extends View {
         mBackgroundPaint.setARGB(255,32,32,33);
         mBorderPaint = new Paint();
         mBorderPaint.setARGB(255,32,128,32);
+    }
+
+    void setKeyboard(SquareKeyboard keyboard) {
+        mKeyboard = keyboard;
+        keyboard.setView(this);
+        mRows = keyboard.getRows();
+        mCols = keyboard.getCols();
+        // size of keyboard might have changed
+        mHeight = 0; // force resize
+        requestLayout(); 
     }
 
     @Override
@@ -72,10 +83,21 @@ public class SquareKeyboardView extends View {
         if (force || w != mWidth || h != mHeight) {
             mWidth = w;
             mHeight = h;
+            mColWidth = w/ mCols;
             mNeedsDraw = true;
             invalidate();
             Log.d(TAG, "updateSize " + w + " " + h);
         }
+    }
+
+    private int xToI(float x) {
+        if( x <= 1 || x >= mWidth -1 ) return -1;
+        return (int) (x / mColWidth);
+    }
+
+    private int yToJ(float y) {
+        if( y <= 1 || y >= mHeight -1 ) return -1;
+        return (int) (y / mRowHeight);
     }
 
     @Override
@@ -95,8 +117,13 @@ public class SquareKeyboardView extends View {
             mCanvas = new Canvas(mBuffer);
         }
         Canvas c = mCanvas;
-        c.drawRect(0, 0, w, h, mBackgroundPaint);
+        //c.drawRect(0, 0, w, h, mBackgroundPaint);
         drawGrid();
+        for(int i = 0; i < mCols; i++) {
+           for(int j = 0; j < mRows; j++) {
+               drawKey(i,j);
+           }
+        }
     }
 
     private void drawGrid() {
@@ -109,6 +136,16 @@ public class SquareKeyboardView extends View {
             mCanvas.drawLine(i*w1,0,i*w1,mHeight,mBorderPaint);
         }
         mCanvas.drawLine(mWidth-1,0,mWidth-1,mHeight,mBorderPaint);
+    }
+
+    private void drawKey(int i, int j) {
+        // intervals inclusive [x0, x1]
+        int x0 = i*mColWidth+mLineThickness;
+        int x1 = x0 + mColWidth-mLineThickness ;
+        x1 = Math.min(x1,mWidth-mLineThickness);
+        int y0 = j*mRowHeight+mLineThickness;
+        int y1 = y0 + mRowHeight-mLineThickness ;
+        mCanvas.drawRect(x0,y0,x1,y1,mBackgroundPaint);
     }
 
     @Override
@@ -125,6 +162,7 @@ public class SquareKeyboardView extends View {
             onMovePos(ev.getX(),ev.getY());
         } else if(a == ev.ACTION_UP) {
             action = "UP";
+            onTouchUp(ev.getX(),ev.getY());
         } else if(a == ev.ACTION_CANCEL) {
             action = "CANCEL";
         } else if(a == ev.ACTION_OUTSIDE) {
@@ -141,11 +179,12 @@ public class SquareKeyboardView extends View {
 
     }
 
-
-    public interface ActionListener {
-        void onKey(char ch);
-        void onText(CharSequence text);
-        void onSpecialKey(int keyCode, KeyEvent event);
+    void onTouchUp(float x, float y) {
+        int i = xToI(x), j = yToJ(y);
+        if( i < 0 || j < 0) return;
+        mKeyboard.onKeyPress(i,j);
     }
+
+
 }
 

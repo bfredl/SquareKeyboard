@@ -24,7 +24,7 @@ import java.util.List;
  * be fleshed out as appropriate.
  */
 public class SquareKeyboardService extends InputMethodService 
-        implements SquareKeyboardView.ActionListener {
+        implements SquareKeyboard.ActionListener {
     static final boolean DEBUG = false;
     
     /**
@@ -37,6 +37,7 @@ public class SquareKeyboardService extends InputMethodService
      */
     static final boolean PROCESS_HARD_KEYS = true;
     
+    private SquareKeyboard mKeyboard;
     private SquareKeyboardView mView;
     
     private int mLastDisplayWidth;
@@ -52,6 +53,7 @@ public class SquareKeyboardService extends InputMethodService
     @Override public void onCreate() {
         super.onCreate();
         mWordSeparators = getResources().getString(R.string.word_separators);
+        mKeyboard = new SquareKeyboard(this);
     }
     
     /**
@@ -70,7 +72,7 @@ public class SquareKeyboardService extends InputMethodService
     @Override public View onCreateInputView() {
         mView = (SquareKeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
-        //mView.setOnKeyboardActionListener(this);
+        mView.setKeyboard(mKeyboard);
         return mView;
     }
 
