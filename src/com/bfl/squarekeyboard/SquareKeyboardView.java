@@ -21,6 +21,7 @@ public class SquareKeyboardView extends View {
     Paint mPaint, mBackgroundPaint, mBorderPaint;
     boolean mNeedsDraw = true;
 
+    float mStartX, mStartY;
 
     public SquareKeyboardView(Context context) {
         super(context);
@@ -136,6 +137,10 @@ public class SquareKeyboardView extends View {
         return true;
     }
 
+    void onMovePos(float x, float y) {
+
+    }
+
 
     public interface ActionListener {
         void onKey(char ch);
@@ -143,3 +148,4 @@ public class SquareKeyboardView extends View {
         void onSpecialKey(int keyCode, KeyEvent event);
     }
 }
+

@@ -23,7 +23,7 @@ import java.util.List;
  * a basic example for how you would get started writing an input method, to
  * be fleshed out as appropriate.
  */
-public class SquareKeyboard extends InputMethodService 
+public class SquareKeyboardService extends InputMethodService 
         implements SquareKeyboardView.ActionListener {
     static final boolean DEBUG = false;
     
