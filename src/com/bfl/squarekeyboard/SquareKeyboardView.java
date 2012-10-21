@@ -19,10 +19,11 @@ public class SquareKeyboardView extends View {
     int mWidth, mHeight;
     Canvas mCanvas;
     Bitmap mBuffer;
-    Paint mPaint, mBackgroundPaint, mBorderPaint;
+    Paint mTextPaint, mBackgroundPaint, mBorderPaint, mActivePaint;
     boolean mNeedsDraw = true;
 
     float mStartX, mStartY;
+    int mActiveI = -1, mActiveJ = -1;
 
     public SquareKeyboardView(Context context) {
         super(context);
@@ -44,14 +45,17 @@ public class SquareKeyboardView extends View {
         mCols = 1;
         mRowHeight = 30;
 
-        mPaint = new Paint();
-        mPaint.setAntiAlias(true);
-        //mPaint.setTextSize(keyTextSize);
-        //mPaint.setTextAlign(Align.CENTER);
-        mPaint.setAlpha(255);
+        mTextPaint = new Paint();
+        mTextPaint.setAntiAlias(true);
+        mTextPaint.setTypeface(Typeface.MONOSPACE);
+        mTextPaint.setTextSize(9);
+        mTextPaint.setTextAlign(Paint.Align.LEFT);
+        mTextPaint.setARGB(255,255,255,255);
 
         mBackgroundPaint = new Paint();
-        mBackgroundPaint.setARGB(255,32,32,33);
+        mBackgroundPaint.setARGB(255,16,16,16);
+        mActivePaint = new Paint();
+        mActivePaint.setARGB(255,16,128,65);
         mBorderPaint = new Paint();
         mBorderPaint.setARGB(255,32,128,32);
     }
@@ -90,12 +94,17 @@ public class SquareKeyboardView extends View {
         }
     }
 
-    private int xToI(float x) {
+    public void invalidateAllKeys() {
+        mNeedsDraw = true;
+        invalidate();
+    }
+
+    private int xToJ(float x) {
         if( x <= 1 || x >= mWidth -1 ) return -1;
         return (int) (x / mColWidth);
     }
 
-    private int yToJ(float y) {
+    private int yToI(float y) {
         if( y <= 1 || y >= mHeight -1 ) return -1;
         return (int) (y / mRowHeight);
     }
@@ -119,8 +128,8 @@ public class SquareKeyboardView extends View {
         Canvas c = mCanvas;
         //c.drawRect(0, 0, w, h, mBackgroundPaint);
         drawGrid();
-        for(int i = 0; i < mCols; i++) {
-           for(int j = 0; j < mRows; j++) {
+        for(int i = 0; i < mRows; i++) {
+           for(int j = 0; j < mCols; j++) {
                drawKey(i,j);
            }
         }
@@ -140,12 +149,20 @@ public class SquareKeyboardView extends View {
 
     private void drawKey(int i, int j) {
         // intervals inclusive [x0, x1]
-        int x0 = i*mColWidth+mLineThickness;
+        int y0 = i*mRowHeight+mLineThickness;
+        int y1 = y0 + mRowHeight-mLineThickness ;
+        int x0 = j*mColWidth+mLineThickness;
         int x1 = x0 + mColWidth-mLineThickness ;
         x1 = Math.min(x1,mWidth-mLineThickness);
-        int y0 = j*mRowHeight+mLineThickness;
-        int y1 = y0 + mRowHeight-mLineThickness ;
-        mCanvas.drawRect(x0,y0,x1,y1,mBackgroundPaint);
+        Paint p;
+        if(mActiveI == i && mActiveJ == j) {
+            p = mActivePaint;
+        } else {
+            p = mBackgroundPaint;
+        }
+            
+        mCanvas.drawRect(x0,y0,x1,y1,p);
+        mCanvas.drawText(mKeyboard.getKeyLabel(i,j),(x0+x1)/2,(y0+y1)/2,mTextPaint);
     }
 
     @Override
@@ -176,13 +193,29 @@ public class SquareKeyboardView extends View {
     }
 
     void onMovePos(float x, float y) {
-
+        int j = xToJ(x), i = yToI(y);
+        if(j == -1) i = -1;
+        if(mActiveI != i || mActiveJ != j)  {
+            int oldI = mActiveI;
+            int oldJ = mActiveJ;
+            mActiveI = i; mActiveJ = j;
+            if(oldI >= 0) {
+                drawKey(oldI,oldJ);
+            }
+            if(i >= 0) {
+                drawKey(i,j);
+            }
+            invalidate();
+        }
     }
 
     void onTouchUp(float x, float y) {
-        int i = xToI(x), j = yToJ(y);
+        int j = xToJ(x), i = yToI(y);
         if( i < 0 || j < 0) return;
+        mActiveI = mActiveJ = 0;
         mKeyboard.onKeyPress(i,j);
+        drawKey(i,j);
+        invalidate();
     }
 
 

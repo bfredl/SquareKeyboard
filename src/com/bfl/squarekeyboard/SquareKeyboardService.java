@@ -16,33 +16,13 @@ import android.view.inputmethod.InputMethodManager;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Example of writing an input method for a soft keyboard.  This code is
- * focused on simplicity over completeness, so it should in no way be considered
- * to be a complete soft keyboard implementation.  Its purpose is to provide
- * a basic example for how you would get started writing an input method, to
- * be fleshed out as appropriate.
- */
 public class SquareKeyboardService extends InputMethodService 
         implements SquareKeyboard.ActionListener {
     static final boolean DEBUG = false;
     
-    /**
-     * This boolean indicates the optional example code for performing
-     * processing of hard keys in addition to regular text generation
-     * from on-screen interaction.  It would be used for input methods that
-     * perform language translations (such as converting text entered on 
-     * a QWERTY keyboard to Chinese), but may not be used for input methods
-     * that are primarily intended to be used for on-screen text entry.
-     */
-    static final boolean PROCESS_HARD_KEYS = true;
     
     private SquareKeyboard mKeyboard;
     private SquareKeyboardView mView;
-    
-    private int mLastDisplayWidth;
-    private long mLastShiftTime;
-    private long mMetaState;
     
     private String mWordSeparators;
     
@@ -54,6 +34,7 @@ public class SquareKeyboardService extends InputMethodService
         super.onCreate();
         mWordSeparators = getResources().getString(R.string.word_separators);
         mKeyboard = new SquareKeyboard(this);
+        mKeyboard.loadFile("/sdcard/layout.txt");
     }
     
     /**
@@ -98,7 +79,7 @@ public class SquareKeyboardService extends InputMethodService
         
         if (!restarting) {
             // Clear shift states.
-            mMetaState = 0; // FIXME
+            //mMetaState = 0; // FIXME
         }
         
         
@@ -350,6 +331,7 @@ public class SquareKeyboardService extends InputMethodService
     }
 
     public void onSpecialKey(int keyCode, KeyEvent event) {
+        getCurrentInputConnection().sendKeyEvent(event);
         // handle backspace etc here
     }
     
