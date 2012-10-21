@@ -5,6 +5,8 @@ import java.io.Reader;
 import java.io.FileReader;
 import java.io.IOException;
 import static android.view.KeyEvent.*;
+import java.util.Map;
+import java.util.HashMap;
 public class SquareKeyboard {
     private final String TAG = "SquareKeyboard";
 
@@ -12,9 +14,27 @@ public class SquareKeyboard {
 
     SquareKeyboardView mView = null;
     ActionListener mListener;
-    Key[][] mLayout;
+    
 
+    protected Map<String,Layout> mLayouts = new HashMap<String,Layout>();
+    Layout mCurLayout;
     boolean mShiftState = false;
+    protected class Layout {
+        Key[][] map;
+        Layout() {
+            map = new Key[mRows][mCols];
+        }
+        public void setKey(int r, int c, Key k) {
+            map[r][c] = k;
+        }
+    }
+
+    protected Layout createLayout(String name) {
+        Layout l = new Layout();
+        mLayouts.put(name,l);
+        return l;
+    }
+
 
     static protected abstract class Key {
         String label;
@@ -64,6 +84,20 @@ public class SquareKeyboard {
 
     }
 
+    protected class SetLayoutKey extends Key {
+        String layout;
+        SetLayoutKey(String label, String layout) {
+            this.label = label;
+            this.layout = layout;
+        } 
+        void onPress() {
+            mCurLayout = mLayouts.get(layout);
+            mView.invalidateAllKeys();
+        }
+
+    }
+
+
     protected String doShift(String s) {
         if(mShiftState) {
             return s.toUpperCase();
@@ -81,6 +115,10 @@ public class SquareKeyboard {
             key = new SpecialKey("R",new KeyEvent(ACTION_DOWN,KEYCODE_ENTER));
         } else if( code == "SHFT" ) {
             key = new ShiftKey();
+        } else if( code == "SYM" ) {
+            key = new SetLayoutKey("sym","sym");
+        } else if( code == "TXT" ) {
+            key = new SetLayoutKey("txt","main");
         } else {
             throw new RuntimeException("INvalid code: " + code);
         }
@@ -104,6 +142,7 @@ public class SquareKeyboard {
             throw new RuntimeException(e);
         }
         fr.parseFile();
+        mCurLayout = mLayouts.get("main");
     }
 
     public void setView(SquareKeyboardView view) {
@@ -120,14 +159,14 @@ public class SquareKeyboard {
     }
 
     public String getKeyLabel(int r, int c) {
-        Key k = mLayout[r][c];
+        Key k = mCurLayout.map[r][c];
         if( k == null) 
             return "";
         return k.getLabel();
     }
 
     public void onKeyPress(int r, int c) {
-        Key k = mLayout[r][c];
+        Key k = mCurLayout.map[r][c];
         if( k != null) 
             k.onPress();
     }
@@ -141,12 +180,8 @@ public class SquareKeyboard {
     void setSize(int rows, int cols) {
         mRows = rows;
         mCols = cols;
-        mLayout = new Key[rows][cols];
     }
 
-    void setKey(int r, int c, Key k) {
-        mLayout[r][c] = k;
-    }
 }
 
 class MapFileReader extends StreamTokenizer {
@@ -231,7 +266,10 @@ class MapFileReader extends StreamTokenizer {
 
     void parseLayout() {
         nextTok();
-            // parse name
+        if( ttype != TT_WORD)
+            fail();
+        String name = sval;
+        SquareKeyboard.Layout l = mTarget.createLayout(name);
         nextTok();
         if( ttype != '{') 
             fail();
@@ -254,11 +292,13 @@ class MapFileReader extends StreamTokenizer {
                     } else {
                         key = mTarget.new TypeKey(sval);
                     }
+                } else if(ttype == '"') {
+                    key = mTarget.new TypeKey(sval);
                 } else {
                     String txt = String.valueOf((char)ttype);
                     key = mTarget.new TypeKey(txt);
                 }
-                mTarget.setKey(r,c,key);
+                l.setKey(r,c,key);
                 nextTok(); 
             }
             if( ttype != TT_EOL) 

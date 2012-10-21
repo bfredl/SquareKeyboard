@@ -212,7 +212,7 @@ public class SquareKeyboardView extends View {
     void onTouchUp(float x, float y) {
         int j = xToJ(x), i = yToI(y);
         if( i < 0 || j < 0) return;
-        mActiveI = mActiveJ = 0;
+        mActiveI = mActiveJ = -1;
         mKeyboard.onKeyPress(i,j);
         drawKey(i,j);
         invalidate();
