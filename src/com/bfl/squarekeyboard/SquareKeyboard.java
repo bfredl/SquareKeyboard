@@ -81,19 +81,32 @@ public class SquareKeyboard {
         TypeKey(String text) {
             this.label = text;
         }
+
+        boolean isCtrlable() {
+            return label.matches("[a-zA-Z]");
+        }
         
         void onPress() {
-            mListener.onText(getLabel());
+            if("ctrl".equals(mState.typeState) && isCtrlable() ) {
+                int val = label.toUpperCase().charAt(0);
+                mListener.onText(String.valueOf((char)(val - 'A' + 1)));
+            } else {
+                mListener.onText(getLabel());
+            }
+
             if(mState.postTypeState != null) {
                 setState(mState.postTypeState);
             }
         }
 
         String getLabel() {
-            if("shift".equals(mState.typeState))
+            if("shift".equals(mState.typeState)) {
                 return label.toUpperCase();
-            else 
+            } else if("ctrl".equals(mState.typeState) && isCtrlable()) {
+                return "^" + label.toUpperCase();
+            } else {
                 return label;
+            }
         }
 
     }

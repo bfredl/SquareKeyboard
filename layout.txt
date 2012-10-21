@@ -2,17 +2,17 @@ size 5 11
 
 layout main {
     1 2 3 4 5 6 7 8 9 0 BKSP
-    q w e r t y i o p å T
+    q w e r t y u i o p å 
     a s d f g h j k l ö ä
-    z x c v b n m , . RET RET
+    z x c v b n m , "." T RET
     S1 S2 S3 " " " " " " " " < U D >
 }
 
 layout sym {
-    1 2 3 4 5 6 7 8 9 0 BKSP
-    + - * / = * * * * * T
-    * * * * * * * * * * *
-    . , ! ? "\"" "\'" & , . RET RET
+    1    2  3    4   5 6 7 8 9 0 BKSP
+    +    -  *    /   = ^ { } < > `
+    "#"  $  _    @   ( ) [ ] | % ~
+    !    ? "\"" "\'" & ; : , "." RET RET
     S1 S2 S3 " " " " " " " " < U D >
 }
 # proudly: verging on xkb complexity...
