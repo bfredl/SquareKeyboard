@@ -5,14 +5,63 @@ layout main {
     q w e r t y i o p å T
     a s d f g h j k l ö ä
     z x c v b n m , . RET RET
-    SHFT SYM C " " " " " " " " < U D >
+    S1 S2 S3 " " " " " " " " < U D >
 }
 
 layout sym {
     1 2 3 4 5 6 7 8 9 0 BKSP
-    + - * / = y i o p å T
-    a s d f g h j k l ö ä
-    z x c v b n m , . RET RET
-    SHFT TXT C " " " " " " " " < U D >
+    + - * / = * * * * * T
+    * * * * * * * * * * *
+    . , ! ? "\"" "\'" & , . RET RET
+    S1 S2 S3 " " " " " " " " < U D >
 }
+# proudly: verging on xkb complexity...
+state main {
+    layout main
+    S1 "sh" shifted
+    S2 "sym" symbol
+    S3 "ctr" ctrl
+}
+
+state shifted {
+    layout main
+    on_type shift
+    post_type return
+    S1 "Sh" capslock
+}
+
+state capslock {
+    layout main
+    on_type shift
+    S1 "SH" main
+    S2 "sym" symbol
+    S3 "ctr" ctrl
+}
+
+state ctrl {
+    layout main
+    on_type ctrl
+    post_type return
+    S3 "ctrl" return
+}
+
+state symbol {
+    layout sym
+    post_type return
+    S2 "sym" symlock
+}
+
+state symlock {
+    layout sym
+    S1 "ABC" shifted
+    S2 "abc" symtext
+    S3 "ctr" ctrl
+}
+
+state symtext {
+    layout main
+    post_type return
+    S2 "abc" main
+}
+
 

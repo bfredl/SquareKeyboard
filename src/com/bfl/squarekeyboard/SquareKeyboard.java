@@ -17,8 +17,9 @@ public class SquareKeyboard {
     
 
     protected Map<String,Layout> mLayouts = new HashMap<String,Layout>();
-    Layout mCurLayout;
-    boolean mShiftState = false;
+    protected Map<String,State> mStates = new HashMap<String,State>();
+    
+    State mState, mLastState;
     protected class Layout {
         Key[][] map;
         Layout() {
@@ -34,7 +35,38 @@ public class SquareKeyboard {
         mLayouts.put(name,l);
         return l;
     }
+    protected Layout getLayout(String name) {
+        return mLayouts.get(name);
+    }
 
+    protected class State {
+        Layout layout;
+        String typeState; //FIXME stringly typed
+        Key[] sKey = new Key[3+1]; //FIXME HARDCODE
+        String postTypeState;
+        State() {
+        }
+    }
+
+    protected State createState(String name) {
+        State s = new State();
+        mStates.put(name,s);
+        return s;
+    }
+
+    protected void setState(String newState) {
+        if(newState.equals("return")) {
+            mState = mLastState;
+        } else {
+            mLastState = mState;
+            mState = mStates.get(newState);
+        }
+        mView.invalidateAllKeys();
+    }
+
+    protected Layout curLayout() {
+        return mState.layout;
+    }
 
     static protected abstract class Key {
         String label;
@@ -52,10 +84,16 @@ public class SquareKeyboard {
         
         void onPress() {
             mListener.onText(getLabel());
+            if(mState.postTypeState != null) {
+                setState(mState.postTypeState);
+            }
         }
 
         String getLabel() {
-            return doShift(label);
+            if("shift".equals(mState.typeState))
+                return label.toUpperCase();
+            else 
+                return label;
         }
 
     }
@@ -73,38 +111,43 @@ public class SquareKeyboard {
 
     }
 
-    protected class ShiftKey extends Key {
-        ShiftKey() {
-            this.label = "sh";
-        } 
-        void onPress() {
-            mShiftState = ! mShiftState;
-            mView.invalidateAllKeys();
-        }
-
-    }
-
-    protected class SetLayoutKey extends Key {
-        String layout;
-        SetLayoutKey(String label, String layout) {
+    protected class MetaKey extends Key {
+        String newState;
+        MetaKey(String label, String newState) {
             this.label = label;
-            this.layout = layout;
+            this.newState = newState;
         } 
         void onPress() {
-            mCurLayout = mLayouts.get(layout);
-            mView.invalidateAllKeys();
+            setState(newState);
         }
 
     }
 
+    protected class MetaKeyPlaceholder extends Key {
+        int id;
+        MetaKeyPlaceholder(int id) {
+            this.id = id;
+        } 
+        String getLabel() {
+            if(mState.sKey[id] != null) {
+                return mState.sKey[id].getLabel();
+            } else {
+                return mLastState.sKey[id].getLabel();
+            }
 
-    protected String doShift(String s) {
-        if(mShiftState) {
-            return s.toUpperCase();
-        } else {
-            return s;
         }
+        void onPress() {
+            if(mState.sKey[id] != null) {
+                mState.sKey[id].onPress();
+            } else {
+                // unshift so we don't stack two substates
+                mState = mLastState; 
+                mLastState.sKey[id].onPress();
+            }
+        }
+
     }
+
 
     public Key getSpecialKey(String code) {
         code = code.intern();
@@ -113,12 +156,8 @@ public class SquareKeyboard {
             key = new SpecialKey("<-",new KeyEvent(ACTION_DOWN,KEYCODE_DEL));
         } else if( code == "RET" ) {
             key = new SpecialKey("R",new KeyEvent(ACTION_DOWN,KEYCODE_ENTER));
-        } else if( code == "SHFT" ) {
-            key = new ShiftKey();
-        } else if( code == "SYM" ) {
-            key = new SetLayoutKey("sym","sym");
-        } else if( code == "TXT" ) {
-            key = new SetLayoutKey("txt","main");
+        } else if( code.matches("S[0-9]+")) {
+            key = new MetaKeyPlaceholder(Integer.parseInt(code.substring(1)));
         } else {
             throw new RuntimeException("INvalid code: " + code);
         }
@@ -142,7 +181,7 @@ public class SquareKeyboard {
             throw new RuntimeException(e);
         }
         fr.parseFile();
-        mCurLayout = mLayouts.get("main");
+        mState = mStates.get("main");
     }
 
     public void setView(SquareKeyboardView view) {
@@ -159,14 +198,14 @@ public class SquareKeyboard {
     }
 
     public String getKeyLabel(int r, int c) {
-        Key k = mCurLayout.map[r][c];
+        Key k = curLayout().map[r][c];
         if( k == null) 
             return "";
         return k.getLabel();
     }
 
     public void onKeyPress(int r, int c) {
-        Key k = mCurLayout.map[r][c];
+        Key k = curLayout().map[r][c];
         if( k != null) 
             k.onPress();
     }
@@ -197,6 +236,7 @@ class MapFileReader extends StreamTokenizer {
         whitespaceChars('\t', '\t');
         wordChars('a','z');
         wordChars('A','Z');
+        wordChars('_','_');
         ordinaryChar('.');
         ordinaryChar('-');
         ordinaryChar('/'); //meh
@@ -243,6 +283,8 @@ class MapFileReader extends StreamTokenizer {
             parseSize();
         } else if(sval == "layout") {
             parseLayout();
+        } else if(sval == "state") {
+            parseState();
         } else {
             fail();
         }
@@ -278,6 +320,7 @@ class MapFileReader extends StreamTokenizer {
             fail();
         int rows = mTarget.getRows(), cols = mTarget.getCols();
         ordinaryChars('0','9');
+        wordChars('0','9');
         nextTok(); // we lie ahead
         for(int r = 0; r < rows; r++) {
             for(int c = 0; c < cols; c++) {
@@ -307,6 +350,45 @@ class MapFileReader extends StreamTokenizer {
         }
         if( ttype != '}') 
             fail();
+    }
+
+    void parseState() {
+        nextTok();
+        if( ttype != TT_WORD)
+            fail();
+        String name = sval;
+        SquareKeyboard.State s = mTarget.createState(name);
+        nextTok();
+        if( ttype != '{') 
+            fail();
+        nextTok();
+        if( ttype != TT_EOL)
+            fail();
+        while(true) {
+            nextTok();
+            if( ttype == TT_EOL) {
+                continue;
+            } else if( ttype == '}') {
+                break;
+            } else if( ttype != TT_WORD) {
+                fail();
+            }
+            String cmd = sval.intern();
+            nextTok();
+            if( cmd == "layout") {
+                s.layout = mTarget.getLayout(sval);
+            } else if( cmd == "on_type" ) {
+                s.typeState = sval; 
+            } else if( cmd == "post_type" ) {
+                s.postTypeState = sval; 
+            } else if(cmd.matches("S[0-9]+")) {
+                int id = Integer.parseInt(cmd.substring(1));
+                String label = sval;
+                nextTok();
+                String state = sval;
+                s.sKey[id] = mTarget.new MetaKey(label, state);
+            }
+        }
     }
                          
 }
