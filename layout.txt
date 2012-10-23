@@ -1,6 +1,6 @@
 size 5 11
 
-layout main {
+layout alfa {
     1 2 3 4 5 6 7 8 9 0 BKSP
     q w e r t y u i o p å 
     a s d f g h j k l ö ä
@@ -15,53 +15,25 @@ layout sym {
     !    ? "\"" "\'" & ; : , "." RET RET
     S1 S2 S3 " " " " " " " " < U D >
 }
-# proudly: verging on xkb complexity...
 state main {
-    layout main
-    S1 "sh" shifted
-    S2 "sym" symbol
-    S3 "ctr" ctrl
+    layout alfa
+    S1 "ABC" deadlatch caps
+    S2 "sym" deadlatch symbol
+    S3 "ctr" dead ctrl:alfa
 }
 
-state shifted {
-    layout main
-    on_type shift
-    post_type return
-    S1 "Sh" capslock
-}
-
-state capslock {
-    layout main
-    on_type shift
-    S1 "SH" main
-    S2 "sym" symbol
-    S3 "ctr" ctrl
-}
-
-state ctrl {
-    layout main
-    on_type ctrl
-    post_type return
-    S3 "ctrl" return
+state caps {
+    layout shift:alfa
+    S1 "abc" state main
+    S2 "sym" deadlatch symbol
+    S3 "ctr" dead ctrl:alfa
 }
 
 state symbol {
     layout sym
-    post_type return
-    S2 "sym" symlock
-}
-
-state symlock {
-    layout sym
-    S1 "ABC" shifted
-    S2 "abc" symtext
-    S3 "ctr" ctrl
-}
-
-state symtext {
-    layout main
-    post_type return
-    S2 "abc" main
+    S1 "ABC" deadlatch caps
+    S2 "abc" deadlatch main 
+    S3 "ctr" dead ctrl:alfa
 }
 
 
