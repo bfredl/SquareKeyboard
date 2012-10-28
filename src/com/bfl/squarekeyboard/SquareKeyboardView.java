@@ -1,12 +1,17 @@
 package com.bfl.squarekeyboard;
 import android.view.View;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.widget.TextView;
+import android.widget.PopupWindow;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.graphics.*;
 import android.util.Log;
+import android.util.TypedValue;
 
 public class SquareKeyboardView extends View {
 
@@ -25,6 +30,15 @@ public class SquareKeyboardView extends View {
     float mStartX, mStartY;
     int mActiveI = -1, mActiveJ = -1;
 
+    int mActiveDir = 0;
+    int sweepTreshold = 50;
+
+
+    TextView mPreviewView;
+    PopupWindow mPreviewWindow;
+    final int mPreviewPadW = 4;
+    final int mPreviewHeight = 50;
+
     public SquareKeyboardView(Context context) {
         super(context);
         construct();
@@ -41,6 +55,9 @@ public class SquareKeyboardView extends View {
     }
     
     private void construct() {
+
+        LayoutInflater inflater = (LayoutInflater)
+            getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mRows = 1;
         mCols = 1;
         mRowHeight = 30;
@@ -52,12 +69,19 @@ public class SquareKeyboardView extends View {
         mTextPaint.setTextAlign(Paint.Align.CENTER);
         mTextPaint.setARGB(255,255,255,255);
 
+        // xmlify this
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setARGB(255,16,16,16);
         mActivePaint = new Paint();
-        mActivePaint.setARGB(255,16,128,65);
+        mActivePaint.setARGB(255,16,130,200);
         mBorderPaint = new Paint();
-        mBorderPaint.setARGB(255,32,128,32);
+        mBorderPaint.setARGB(255,0,140,180);
+
+        mPreviewWindow = new PopupWindow(getContext());
+
+        mPreviewView = (TextView) inflater.inflate(R.layout.popup, null);
+        mPreviewWindow.setContentView(mPreviewView);
+        mPreviewWindow.setBackgroundDrawable(null);
     }
 
     void setKeyboard(SquareKeyboard keyboard) {
@@ -107,6 +131,16 @@ public class SquareKeyboardView extends View {
     private int yToI(float y) {
         if( y <= 1 || y >= mHeight -1 ) return -1;
         return (int) (y / mRowHeight);
+    }
+
+    private int calcAngle(float dx, float dy) {
+        if(dx*dx+dy*dy < sweepTreshold*sweepTreshold) 
+            return 0;
+        double angl = Math.atan2(dx,dy) / (Math.PI);
+        if(angl > -0.25 && angl < 0.25 || angl > 0.75 || angl < -0.75) 
+            return SquareKeyboard.SWIPE_LR;
+        else
+            return SquareKeyboard.SWIPE_UD;
     }
 
     @Override
@@ -162,7 +196,36 @@ public class SquareKeyboardView extends View {
         }
             
         mCanvas.drawRect(x0,y0,x1,y1,p);
-        mCanvas.drawText(mKeyboard.getKeyLabel(i,j),(x0+x1)/2,(y0+y1)/2,mTextPaint);
+        mCanvas.drawText(mKeyboard.getKeyLabel(i,j,0),(x0+x1)/2,(y0+y1)/2,mTextPaint);
+    }
+
+    private void updatePreview() {
+        if(mActiveI == -1 )  {
+            mPreviewWindow.dismiss();
+            return;
+        }
+        String label = mKeyboard.getKeyLabel(mActiveI,mActiveJ,mActiveDir);
+        mPreviewView.setText(label);
+        int size = label.length() > 2 ? 16 : 20;
+        mPreviewView.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+        mPreviewView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        int popupWidth = mPreviewView.getMeasuredWidth() + mPreviewPadW; 
+        int x = mColWidth*mActiveJ-(popupWidth-mColWidth)/2;
+        int y = mRowHeight*(mActiveI-2)-mRowHeight/2;
+        showPreviewAt(x, y, popupWidth, mPreviewHeight);
+        mPreviewView.setVisibility(VISIBLE);
+    }
+
+    private void showPreviewAt(int x, int y, int w, int h) {
+         if (mPreviewWindow.isShowing()) {
+            mPreviewWindow.update(x, y, w, h);
+        } else {
+            mPreviewWindow.setWidth(w);
+            mPreviewWindow.setHeight(h);
+            mPreviewWindow.showAtLocation(this, Gravity.NO_GRAVITY,
+                    x, y);
+        }
     }
 
     @Override
@@ -193,12 +256,14 @@ public class SquareKeyboardView extends View {
     }
 
     void onMovePos(float x, float y) {
-        int j = xToJ(x), i = yToI(y);
+        int j = xToJ(x), i = yToI(y), dir = calcAngle(x-mStartX,y-mStartY);
         if(j == -1) i = -1;
-        if(mActiveI != i || mActiveJ != j)  {
+        if(mActiveI != i || mActiveJ != j || mActiveDir != dir)  {
             int oldI = mActiveI;
             int oldJ = mActiveJ;
             mActiveI = i; mActiveJ = j;
+            mActiveDir = dir;
+            updatePreview();
             if(oldI >= 0) {
                 drawKey(oldI,oldJ);
             }
@@ -210,12 +275,11 @@ public class SquareKeyboardView extends View {
     }
 
     void onTouchUp(float x, float y) {
-        int j = xToJ(x), i = yToI(y);
+        int j = xToJ(x), i = yToI(y), dir = calcAngle(x-mStartX,y-mStartY);
         if( i < 0 || j < 0) return;
-        mActiveI = mActiveJ = -1;
-        mKeyboard.onKeyPress(i,j);
-        drawKey(i,j);
-        invalidate();
+        // FIXME: multitouch still a bit buggy, can commit unpreviewed key
+        mKeyboard.onKeyPress(i,j,dir);
+        onMovePos(-1,-1);
     }
 
 

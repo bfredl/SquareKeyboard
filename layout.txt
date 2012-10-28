@@ -20,6 +20,8 @@ state main {
     S1 "ABC" deadlatch caps
     S2 "sym" deadlatch symbol
     S3 "ctr" dead ctrl:alfa
+    swipe_lr shift:alfa
+    swipe_ud sym
 }
 
 state caps {
@@ -27,6 +29,8 @@ state caps {
     S1 "abc" state main
     S2 "sym" deadlatch symbol
     S3 "ctr" dead ctrl:alfa
+    swipe_lr alfa
+    swipe_ud sym
 }
 
 state symbol {
@@ -34,6 +38,8 @@ state symbol {
     S1 "ABC" deadlatch caps
     S2 "abc" deadlatch main 
     S3 "ctr" dead ctrl:alfa
+    swipe_lr shift:alfa
+    swipe_ud alfa
 }
 
 

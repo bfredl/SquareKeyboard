@@ -26,8 +26,13 @@ public class SquareKeyboard {
     List<Layout> mDeadLayout;
     int mActiveDeadKey = -1;
 
-    final int SHIFT_CAPS = 1;
-    final int SHIFT_CTRL = 2;
+    static final int SHIFT_CAPS = 1;
+    static final int SHIFT_CTRL = 2;
+
+    static final int SWIPE_UD  = 1;
+    static final int SWIPE_LR  = 2;
+    static final int N_ANGLES  = 2;
+
     protected class Layout {
         Key[][] map;
         int shiftstate;
@@ -62,6 +67,7 @@ public class SquareKeyboard {
 
     protected class State {
         List<Layout> layout;
+        List<Layout>[] swipeLayout = new List[N_ANGLES+1];
         MetaKey[] sKey = new MetaKey[3+1]; //FIXME HARDCODE
     }
 
@@ -267,9 +273,11 @@ public class SquareKeyboard {
         return mCols;
     }
 
-    public Key getKey(int i, int j) {
+    public Key getKey(int i, int j, int swipe) {
         List<Layout> l;
-        if(mDeadLayout != null) {
+        if(swipe != 0 && mState.swipeLayout[swipe] != null) {
+            l = mState.swipeLayout[swipe]; 
+        } else if(mDeadLayout != null) {
             l = mDeadLayout;
         } else {
             l = mState.layout;
@@ -277,15 +285,15 @@ public class SquareKeyboard {
         return getKeyFromLayoutList(l, i, j);
     }
 
-    public String getKeyLabel(int r, int c) {
-        Key k = getKey(r,c);
+    public String getKeyLabel(int r, int c, int ang) {
+        Key k = getKey(r,c,ang);
         if( k == null) 
             return "";
         return k.getLabel();
     }
 
-    public void onKeyPress(int r, int c) {
-        Key k = getKey(r,c);
+    public void onKeyPress(int r, int c, int ang) {
+        Key k = getKey(r,c,ang);
         if( k != null) 
             k.onPress();
     }
@@ -476,6 +484,16 @@ public class SquareKeyboard {
                     }
                     s.sKey[id] =key;
 
+                } else if(cmd.matches("swipe_[a-z]+")) {
+                    int dir = 0;
+                    if(cmd == "swipe_lr") 
+                        dir = SWIPE_LR;
+                    else
+                        dir = SWIPE_UD;
+                    List<Layout> l = parseLayoutList();
+                    s.swipeLayout[dir] = l;
+                } else {
+                    fail();
                 }
             }
         }
