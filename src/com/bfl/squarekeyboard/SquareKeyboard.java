@@ -97,7 +97,8 @@ public class SquareKeyboard {
         TypeKey(String text) {
             this(text,text);
         }
-        private TypeKey(String label, String text) {
+
+        TypeKey(String label, String text) {
             this.label = label;
             this.text = text;
         }
@@ -210,9 +211,21 @@ public class SquareKeyboard {
         code = code.intern();
         Key key = null;
         if( code == "BKSP" ) {
-            key = new SpecialKey("<-",new KeyEvent(ACTION_DOWN,KEYCODE_DEL));
+            key = new SpecialKey("\u21a4",new KeyEvent(ACTION_DOWN,KEYCODE_DEL));
         } else if( code == "RET" ) {
-            key = new SpecialKey("R",new KeyEvent(ACTION_DOWN,KEYCODE_ENTER));
+            key = new SpecialKey("\u21B5",new KeyEvent(ACTION_DOWN,KEYCODE_ENTER));
+        } else if( code == "LEFT" ) {
+            key = new SpecialKey("\u2190",new KeyEvent(ACTION_DOWN, 	KEYCODE_DPAD_LEFT));
+        } else if( code == "RIGHT" ) {
+            key = new SpecialKey("\u2192",new KeyEvent(ACTION_DOWN, 	KEYCODE_DPAD_RIGHT));
+        } else if( code == "UP" ) {
+            key = new SpecialKey("\u2191",new KeyEvent(ACTION_DOWN, 	KEYCODE_DPAD_UP));
+        } else if( code == "DOWN" ) {
+            key = new SpecialKey("\u2193",new KeyEvent(ACTION_DOWN, 	KEYCODE_DPAD_DOWN));
+        } else if( code == "TAB" ) {
+            key = new SpecialKey("\u21B9",new KeyEvent(ACTION_DOWN, 	KEYCODE_TAB));
+        } else if( code == "ESC" ) {
+            key = new SpecialKey("Esc",new KeyEvent(ACTION_DOWN, 	KEYCODE_ESCAPE));
         } else if( code.matches("S[0-9]+")) {
             key = new MetaKeyPlaceholder(Integer.parseInt(code.substring(1)));
         } else {
@@ -381,12 +394,12 @@ public class SquareKeyboard {
             nextTok();
             if( ttype != TT_EOL)
                 fail();
-            int rows = getRows(), cols = getCols();
+
             ordinaryChars('0','9');
             wordChars('0','9');
             nextTok(); // we lie ahead
-            for(int r = 0; r < rows; r++) {
-                for(int c = 0; c < cols; c++) {
+            for(int r = 0; r < mRows; r++) {
+                for(int c = 0; c < mCols; c++) {
                     Key key = null;
                     if( ttype == TT_EOL) {
                         break; 

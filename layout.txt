@@ -4,16 +4,16 @@ layout alfa {
     1 2 3 4 5 6 7 8 9 0 BKSP
     q w e r t y u i o p å 
     a s d f g h j k l ö ä
-    z x c v b n m , "." T RET
-    S1 S2 S3 " " " " " " " " < U D >
+    z x c v b n m , "." TAB RET
+    S1 S2 S3 ESC " " " " " " LEFT UP DOWN RIGHT
 }
 
 layout sym {
     1    2  3    4   5 6 7 8 9 0 BKSP
     +    -  *    /   = ^ { } < > `
-    "#"  $  _    @   ( ) [ ] | % ~
-    !    ? "\"" "\'" & ; : , "." RET RET
-    S1 S2 S3 " " " " " " " " < U D >
+    "#"  _  $    \   ( ) [ ] | % ~
+    !    ? "\"" "\'" & ; : , "." @ RET
+    S1 S2 S3 ESC " " " " " " LEFT UP DOWN RIGHT
 }
 state main {
     layout alfa

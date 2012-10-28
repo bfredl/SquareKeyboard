@@ -48,7 +48,7 @@ public class SquareKeyboardView extends View {
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTypeface(Typeface.MONOSPACE);
-        mTextPaint.setTextSize(9);
+        mTextPaint.setTextSize(11);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
         mTextPaint.setARGB(255,255,255,255);
 
