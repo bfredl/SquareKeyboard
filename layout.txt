@@ -17,8 +17,9 @@ layout sym {
 }
 state main {
     layout alfa
+    alt_label sym
     S1 "ABC" deadlatch caps
-    S2 "sym" deadlatch symbol
+    S2 "sym" state symbol
     S3 "ctr" dead ctrl:alfa
     swipe_lr shift:alfa
     swipe_ud sym
@@ -26,8 +27,9 @@ state main {
 
 state caps {
     layout shift:alfa
+    alt_label sym
     S1 "abc" state main
-    S2 "sym" deadlatch symbol
+    S2 "sym" state symbol
     S3 "ctr" dead ctrl:alfa
     swipe_lr alfa
     swipe_ud sym
@@ -35,8 +37,9 @@ state caps {
 
 state symbol {
     layout sym
-    S1 "ABC" deadlatch caps
-    S2 "abc" deadlatch main 
+    alt_label alfa
+    S1 "ABC" state caps
+    S2 "abc" state main 
     S3 "ctr" dead ctrl:alfa
     swipe_lr shift:alfa
     swipe_ud alfa

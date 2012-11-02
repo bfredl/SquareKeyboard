@@ -24,7 +24,8 @@ public class SquareKeyboardView extends View {
     int mWidth, mHeight;
     Canvas mCanvas;
     Bitmap mBuffer;
-    Paint mTextPaint, mBackgroundPaint, mBorderPaint, mActivePaint;
+    Paint mTextPaint, mBackgroundPaint, mBorderPaint;
+    Paint mActivePaint, mAltTextPaint, mSmallTextPaint;
     boolean mNeedsDraw = true;
 
     float mStartX, mStartY;
@@ -65,9 +66,14 @@ public class SquareKeyboardView extends View {
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTypeface(Typeface.MONOSPACE);
-        mTextPaint.setTextSize(11);
+        mTextPaint.setTextSize(13);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
         mTextPaint.setARGB(255,255,255,255);
+        mAltTextPaint = new Paint(mTextPaint);
+        mAltTextPaint.setARGB(255,128,128,128);
+        mSmallTextPaint = new Paint(mTextPaint);
+        mSmallTextPaint.setTextSize(11);
+
 
         // xmlify this
         mBackgroundPaint = new Paint();
@@ -194,9 +200,22 @@ public class SquareKeyboardView extends View {
         } else {
             p = mBackgroundPaint;
         }
-            
+
         mCanvas.drawRect(x0,y0,x1,y1,p);
-        mCanvas.drawText(mKeyboard.getKeyLabel(i,j,0),(x0+x1)/2,(y0+y1)/2,mTextPaint);
+        String label = mKeyboard.getKeyLabel(i,j,0);
+        String altlabel = mKeyboard.getKeyLabel(i,j,SquareKeyboard.SWIPE_DISPLAY);
+        if( label.equals(altlabel) || altlabel == null) {
+            Paint paint;
+            if(label.length() > 2) {
+                paint = mSmallTextPaint;
+            } else {
+                paint = mTextPaint;
+            }
+            mCanvas.drawText(label,(x0+x1)/2,(y0+y1)/2+5,paint);
+        } else {
+            mCanvas.drawText(label,(3*x0+x1)/4, (4*y1+y0)/5,mTextPaint);
+            mCanvas.drawText(altlabel,(1*x0+4*x1)/5,(3*y0+1*y1)/4+5,mAltTextPaint);
+        }
     }
 
     private void updatePreview() {
@@ -219,6 +238,9 @@ public class SquareKeyboardView extends View {
 
     private void showPreviewAt(int x, int y, int w, int h) {
          if (mPreviewWindow.isShowing()) {
+             // FIXME: text placing wrong if not moving
+             // force move as temporary workaround
+            mPreviewWindow.update(x+1, y, w, h); 
             mPreviewWindow.update(x, y, w, h);
         } else {
             mPreviewWindow.setWidth(w);

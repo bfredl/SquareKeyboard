@@ -29,9 +29,10 @@ public class SquareKeyboard {
     static final int SHIFT_CAPS = 1;
     static final int SHIFT_CTRL = 2;
 
+    static final int SWIPE_DISPLAY = 3;
     static final int SWIPE_UD  = 1;
     static final int SWIPE_LR  = 2;
-    static final int N_ANGLES  = 2;
+    static final int N_ANGLES  = 3;
 
     protected class Layout {
         Key[][] map;
@@ -275,18 +276,18 @@ public class SquareKeyboard {
 
     public Key getKey(int i, int j, int swipe) {
         List<Layout> l;
-        if(swipe != 0 && mState.swipeLayout[swipe] != null) {
-            l = mState.swipeLayout[swipe]; 
-        } else if(mDeadLayout != null) {
+        if(mDeadLayout != null) {
             l = mDeadLayout;
+        } else if(swipe != 0 && mState.swipeLayout[swipe] != null) {
+            l = mState.swipeLayout[swipe]; 
         } else {
             l = mState.layout;
         }
         return getKeyFromLayoutList(l, i, j);
     }
 
-    public String getKeyLabel(int r, int c, int ang) {
-        Key k = getKey(r,c,ang);
+    public String getKeyLabel(int r, int c, int swipe) {
+        Key k = getKey(r,c,swipe);
         if( k == null) 
             return "";
         return k.getLabel();
@@ -484,12 +485,15 @@ public class SquareKeyboard {
                     }
                     s.sKey[id] =key;
 
-                } else if(cmd.matches("swipe_[a-z]+")) {
+                } else if(cmd.matches("swipe_[a-z]+") || cmd == "alt_label") {
                     int dir = 0;
-                    if(cmd == "swipe_lr") 
+                    if(cmd == "swipe_lr") {
                         dir = SWIPE_LR;
-                    else
+                    } else if(cmd == "swipe_ud") {
                         dir = SWIPE_UD;
+                    } else if(cmd == "alt_label") {
+                        dir = SWIPE_DISPLAY;
+                    }
                     List<Layout> l = parseLayoutList();
                     s.swipeLayout[dir] = l;
                 } else {
