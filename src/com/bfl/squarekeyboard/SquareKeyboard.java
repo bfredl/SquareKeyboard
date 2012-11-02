@@ -34,6 +34,15 @@ public class SquareKeyboard {
     static final int SWIPE_LR  = 2;
     static final int N_ANGLES  = 3;
 
+    static final int KEYSTATE_NORMAL = 0;
+    // metakey which is dead
+    static final int KEYSTATE_DEADMETA = 1;
+    // modified by dead layout
+    static final int KEYSTATE_DEADKEY = 2;
+    // modified by swipe
+    static final int KEYSTATE_SWIPED = 3;
+
+
     protected class Layout {
         Key[][] map;
         int shiftstate;
@@ -57,7 +66,9 @@ public class SquareKeyboard {
     protected Layout getLayout(String name, int shiftstate) {
         return new Layout(mLayouts.get(name),shiftstate);
     }
-    protected static Key getKeyFromLayoutList(List<Layout> layouts, int i, int j) {
+    protected static Key getKey(List<Layout> layouts, int i, int j) {
+        if(layouts == null) 
+            return null;
         for(Layout l: layouts) {
             Key k = l.getKey(i,j);
             if(k != null) 
@@ -95,7 +106,10 @@ public class SquareKeyboard {
         }
 
         Key getShifted(int shiftstate) {
-            return this;
+            if(shiftstate == 0) 
+                return this;
+            else
+                return null;
         }
     }
 
@@ -117,7 +131,9 @@ public class SquareKeyboard {
         Key getShifted(int shiftstate) {
             if(shiftstate == SHIFT_CAPS) {
                 return new TypeKey(text.toUpperCase());
-            } else if(shiftstate == SHIFT_CTRL && isCtrlable()) {
+            } else if(shiftstate == SHIFT_CTRL) {
+                if(!isCtrlable()) 
+                    return null;
                 char val = text.toUpperCase().charAt(0);
                 return new TypeKey("^" + val,
                         String.valueOf((char)(val - 'A' + 1)));
@@ -275,15 +291,30 @@ public class SquareKeyboard {
     }
 
     public Key getKey(int i, int j, int swipe) {
-        List<Layout> l;
-        if(mDeadLayout != null) {
-            l = mDeadLayout;
-        } else if(swipe != 0 && mState.swipeLayout[swipe] != null) {
-            l = mState.swipeLayout[swipe]; 
-        } else {
-            l = mState.layout;
+        Key deadKey = getKey(mDeadLayout, i, j);
+        if(deadKey != null) 
+            return deadKey;
+        if(swipe != 0) {
+            Key swipeKey = getKey(mState.swipeLayout[swipe], i, j);
+            if( swipeKey != null || swipe == SWIPE_DISPLAY) 
+                return swipeKey;
         }
-        return getKeyFromLayoutList(l, i, j);
+        return getKey(mState.layout, i, j);
+    }
+
+    public int getKeyState(int i, int j, int swipe) {
+        Key k = getKey(i, j, swipe);
+        if( k instanceof MetaKeyPlaceholder) {
+            if(((MetaKeyPlaceholder)k).id == mActiveDeadKey)
+                return KEYSTATE_DEADMETA;
+        }
+        if(getKey(mDeadLayout, i, j) != null) 
+            return KEYSTATE_DEADKEY;
+        if(swipe != 0) {
+            if(getKey(mState.swipeLayout[swipe], i, j) != null) 
+                return KEYSTATE_SWIPED;
+        }
+        return KEYSTATE_NORMAL;
     }
 
     public String getKeyLabel(int r, int c, int swipe) {
@@ -408,6 +439,8 @@ public class SquareKeyboard {
             wordChars('0','9');
             nextTok(); // we lie ahead
             for(int r = 0; r < mRows; r++) {
+                if(ttype == '}') 
+                    break;
                 for(int c = 0; c < mCols; c++) {
                     Key key = null;
                     if( ttype == TT_EOL) {
@@ -422,6 +455,8 @@ public class SquareKeyboard {
                         }
                     } else if(ttype == '"') {
                         key = new TypeKey(sval);
+                    } else if(ttype == '*') {
+                        key = null;
                     } else {
                         String txt = String.valueOf((char)ttype);
                         key = new TypeKey(txt);

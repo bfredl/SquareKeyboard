@@ -1,48 +1,61 @@
 size 5 11
 
-layout alfa {
+layout common {
     1 2 3 4 5 6 7 8 9 0 BKSP
+
+
+    * * * * * * * * * * RET
+    S1 S2 S3 ESC " " " " " " LEFT UP DOWN RIGHT
+}
+layout alfa {
+
     q w e r t y u i o p å 
     a s d f g h j k l ö ä
-    z x c v b n m , "." TAB RET
-    S1 S2 S3 ESC " " " " " " LEFT UP DOWN RIGHT
+    z x c v b n m , "." TAB
+
 }
 
 layout sym {
-    1    2  3    4   5 6 7 8 9 0 BKSP
-    +    -  *    /   = ^ { } < > `
+
+    +    -  "*"  /   = ^ { } < > `
     "#"  _  $    \   ( ) [ ] | % ~
-    !    ? "\"" "\'" & ; : , "." @ RET
-    S1 S2 S3 ESC " " " " " " LEFT UP DOWN RIGHT
+    !    ? "\"" "\'" & ; : , "." @ 
+
 }
+
+layout downup {
+    "sin(" "cos(" "exp(" "sqrt(" "log(" "lambda "  
+}
+
+
 state main {
-    layout alfa
+    layout alfa common
     alt_label sym
     S1 "ABC" deadlatch caps
     S2 "sym" state symbol
     S3 "ctr" dead ctrl:alfa
-    swipe_lr shift:alfa
-    swipe_ud sym
+    swipe_ud downup shift:alfa
+    swipe_lr sym
 }
 
 state caps {
-    layout shift:alfa
+    layout shift:alfa alfa common
     alt_label sym
     S1 "abc" state main
     S2 "sym" state symbol
     S3 "ctr" dead ctrl:alfa
-    swipe_lr alfa
-    swipe_ud sym
+    swipe_ud downup alfa
+    swipe_lr sym
 }
 
 state symbol {
-    layout sym
+    layout sym common
     alt_label alfa
     S1 "ABC" state caps
     S2 "abc" state main 
     S3 "ctr" dead ctrl:alfa
-    swipe_lr shift:alfa
-    swipe_ud alfa
+    swipe_ud downup shift:alfa
+    swipe_lr alfa
 }
 
 
