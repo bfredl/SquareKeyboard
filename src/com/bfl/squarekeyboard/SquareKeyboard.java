@@ -94,7 +94,7 @@ public class SquareKeyboard {
         mActiveDeadKey = -1;
         mDeadLayout = null;
         if(mView != null) 
-            mView.invalidateAllKeys();
+            mView.forceDraw();
     }
 
     static protected abstract class Key {
@@ -146,7 +146,7 @@ public class SquareKeyboard {
             if(mDeadLayout != null) {
                 mActiveDeadKey = -1;
                 mDeadLayout = null;
-                mView.invalidateAllKeys();
+                mView.forceDraw();
             }
         }
     }
@@ -178,11 +178,11 @@ public class SquareKeyboard {
         } 
         void onPress() {
             mDeadLayout = deadLayout;
-            mView.invalidateAllKeys();
+            mView.forceDraw();
         }
         void onSecondPress() {
             mDeadLayout = null;
-            mView.invalidateAllKeys();
+            mView.forceDraw();
         }
 
     }
@@ -198,7 +198,7 @@ public class SquareKeyboard {
         void onPress() {
             if(dead) {
                 mDeadLayout = mStates.get(newState).layout;
-                mView.invalidateAllKeys();
+                mView.forceDraw();
             } else {
                 setState(newState);
             }
