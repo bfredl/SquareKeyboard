@@ -49,13 +49,13 @@ public abstract class BaseKeyboardView extends View {
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);
         //mTextPaint.setTypeface(Typeface.MONOSPACE);
-        mTextPaint.setTextSize(13);
+        mTextPaint.setTextSize(15);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
         mTextPaint.setARGB(255,255,255,255);
         mAltTextPaint = new Paint(mTextPaint);
         mAltTextPaint.setARGB(255,128,128,128);
         mSmallTextPaint = new Paint(mTextPaint);
-        mSmallTextPaint.setTextSize(11);
+        mSmallTextPaint.setTextSize(13);
 
 
         // xmlify this

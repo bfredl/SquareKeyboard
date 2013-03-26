@@ -147,8 +147,10 @@ public class SquareKeyboardView extends BaseKeyboardView {
 
     @Override
     void onTouchDown(int id, float x, float y) {
-        mStartX = x;
-        mStartY = y;
+        if(id == 0) { //HACK
+            mStartX = x;
+            mStartY = y;
+        }
         onTouchMove(id, x, y);
     }
 
@@ -179,6 +181,7 @@ public class SquareKeyboardView extends BaseKeyboardView {
     @Override
     void onTouchUp(int id,float x, float y) {
         int j = xToJ(x), i = yToI(y), dir = calcAngle(x-mStartX,y-mStartY);
+        if( id != 0 ) dir = 0; //FIXME: proper multitouch support
         if( i < 0 || j < 0) return;
         // FIXME: multitouch still a bit buggy, can commit unpreviewed key
         mKeyboard.onKeyPress(i,j,dir);
