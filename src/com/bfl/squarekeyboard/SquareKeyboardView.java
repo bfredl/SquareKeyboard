@@ -20,7 +20,8 @@ public class SquareKeyboardView extends BaseKeyboardView {
     private final String TAG = "SquareKeyboardView";
     SquareKeyboard mKeyboard;
     int mRows, mCols;
-    int mRowHeight, mColWidth;
+    int mRowHeight;
+     float mColWidth;
     int mLineThickness = 1;
 
 
@@ -49,7 +50,7 @@ public class SquareKeyboardView extends BaseKeyboardView {
 
         mRows = 1;
         mCols = 1;
-        mRowHeight = 30;
+        mRowHeight = 35;
 
     }
 
@@ -66,18 +67,20 @@ public class SquareKeyboardView extends BaseKeyboardView {
     @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec); // should be fill parent
-        setMeasuredDimension(width, mRowHeight*mRows+mLineThickness);
+        setMeasuredDimension(width, mRowHeight*mRows+2*mLineThickness);
     }
 
 
     private int xToJ(float x) {
-        if( x <= 1 || x >= mWidth -1 ) return -1;
-        return (int) (x / mColWidth);
+        int j =  (int) (x / mColWidth);
+        if( j < 0 || j >= mCols ) return -1;
+        return j;
     }
 
     private int yToI(float y) {
-        if( y <= 1 || y >= mHeight -1 ) return -1;
-        return (int) (y / mRowHeight);
+        int i =  (int) (y / mRowHeight);
+        if( y < 1 || i < 0 || i >= mRows ) return -1;
+        return i;
     }
 
     private int calcAngle(float dx, float dy) {
@@ -92,7 +95,7 @@ public class SquareKeyboardView extends BaseKeyboardView {
 
     @Override
     public void onDraw(Canvas c) {
-        mColWidth = mWidth/ mCols;
+        mColWidth = (float)(mWidth-mLineThickness)/ mCols;
         c.drawRect(0, 0, mWidth, mHeight, mBorderPaint);
         //drawGrid(c);
         for(int i = 0; i < mRows; i++) {
@@ -106,16 +109,17 @@ public class SquareKeyboardView extends BaseKeyboardView {
         // intervals inclusive [x0, x1]
         String label = mKeyboard.getKeyLabel(i,j,0);
         String altlabel = mKeyboard.getKeyLabel(i,j,SquareKeyboard.SWIPE_DISPLAY);
-        int x0 = j*mColWidth+mLineThickness;
+        float x0 = j*mColWidth+mLineThickness;
         int j2=j+1;
         if( label.equals(" ")) {
             while(j2<mCols && mKeyboard.getKeyLabel(i,j2,0).equals(" ")) 
                 j2++;
         }
-        int x1 = j2*mColWidth;//-mLineThickness ;
-        int y0 = i*mRowHeight+mLineThickness;
-        int y1 = (i+1)*mRowHeight;//-mLineThickness ;
-        x1 = Math.min(x1,mWidth-mLineThickness);
+        float x1 = j2*mColWidth;//-mLineThickness ;
+        //x1 = Math.min(x1,(float)mWidth-mLineThickness);
+        float y0 = i*mRowHeight+mLineThickness;
+        float y1 = (i+1)*mRowHeight;//-mLineThickness ;
+        //y1 = Math.min(y1,(float)mHeight-mLineThickness);
         Paint p;
         if(mActiveI == i && mActiveJ == j) {
             p = mActivePaint;
@@ -135,7 +139,7 @@ public class SquareKeyboardView extends BaseKeyboardView {
         }
         String label = mKeyboard.getKeyLabel(mActiveI,mActiveJ,mActiveDir);
         int state = mKeyboard.getKeyState(mActiveI,mActiveJ,mActiveDir);
-        int x = mColWidth*mActiveJ+mColWidth/2;
+        int x = (int) (mColWidth*mActiveJ+mColWidth/2);
         int y = mRowHeight*(mActiveI-2)-mRowHeight/2;
         showPreview(label,state,x,y);
     }

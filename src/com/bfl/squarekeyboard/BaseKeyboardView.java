@@ -79,7 +79,7 @@ public abstract class BaseKeyboardView extends View {
         mSwipedPopupBackground = res.getDrawable(R.drawable.popupback_swiped);
     }
 
-    protected void drawKey(Canvas c, int x0, int x1, int y0, int y1, String label, String altlabel, Paint bkgStyle) {
+    protected void drawKey(Canvas c, float x0, float x1, float y0, float y1, String label, String altlabel, Paint bkgStyle) {
         c.drawRect(x0,y0,x1,y1,bkgStyle);
         if( altlabel.equals(label) || altlabel.equals("")) {
             Paint paint;

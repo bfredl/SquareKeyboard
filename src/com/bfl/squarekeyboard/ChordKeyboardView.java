@@ -43,8 +43,8 @@ public class ChordKeyboardView extends BaseKeyboardView {
     }
     
     private void construct() {
-        mRows = 1;
-        mCols = 1;
+        mRows = 2;
+        mCols = 5;
         mRowHeight = 40;
         mColWidth = 40;
     }
@@ -113,10 +113,10 @@ public class ChordKeyboardView extends BaseKeyboardView {
         String label = String.valueOf(indexToId(box,i,j));
         String altlabel = "";
         int boxX = (box == 1) ? mRightPaneX : 0;
-        int x0 = boxX+j*mColWidth+mLineThickness;
-        int x1 = boxX+(j+1)*mColWidth;
-        int y0 = i*mRowHeight+mLineThickness;
-        int y1 = (i+1)*mRowHeight;//-mLineThickness ;
+        float x0 = boxX+j*mColWidth+mLineThickness;
+        float x1 = boxX+(j+1)*mColWidth;
+        float y0 = i*mRowHeight+mLineThickness;
+        float y1 = (i+1)*mRowHeight;//-mLineThickness ;
         x1 = Math.min(x1,mWidth-mLineThickness);
         Paint p;
             p = mBackgroundPaint;
