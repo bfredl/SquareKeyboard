@@ -2,7 +2,7 @@
         package="com.bfl.squarekeyboard">
         <supports-screens android:xlargeScreens="true"/>
     <application android:label="@string/ime_name">
-        <service android:name="SquareKeyboardService"
+        <service android:name="KeyboardService"
                 android:permission="android.permission.BIND_INPUT_METHOD">
             <intent-filter>
                 <action android:name="android.view.InputMethod" />

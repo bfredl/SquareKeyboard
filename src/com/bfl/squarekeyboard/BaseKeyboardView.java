@@ -17,8 +17,6 @@ import android.content.res.Resources;
 
 public abstract class BaseKeyboardView extends View {
     int mWidth, mHeight;
-    Canvas mCanvas;
-    Bitmap mBuffer;
     boolean mNeedsDraw = true;
     Paint mTextPaint, mBackgroundPaint, mBorderPaint;
     Paint mActivePaint, mLatchedPaint, mAltTextPaint, mSmallTextPaint;
@@ -69,6 +67,7 @@ public abstract class BaseKeyboardView extends View {
         mLatchedPaint.setARGB(255,70,160,00);
         mBorderPaint = new Paint();
         mBorderPaint.setARGB(255,0,130,180);
+        //mBorderPaint.setAntiAlias(true);
 
         mPreviewWindow = new PopupWindow(getContext());
 
@@ -80,44 +79,37 @@ public abstract class BaseKeyboardView extends View {
         mSwipedPopupBackground = res.getDrawable(R.drawable.popupback_swiped);
     }
 
-    public void updateSize(boolean force) {
-        int w = getWidth();
-        int h = getHeight();
-        if (force || w != mWidth || h != mHeight) {
-            mWidth = w;
-            mHeight = h;
-            forceDraw();
-            Log.d(TAG, "updateSize " + w + " " + h);
+    protected void drawKey(Canvas c, int x0, int x1, int y0, int y1, String label, String altlabel, Paint bkgStyle) {
+        c.drawRect(x0,y0,x1,y1,bkgStyle);
+        if( altlabel.equals(label) || altlabel.equals("")) {
+            Paint paint;
+            if(label.length() > 2) {
+                paint = mSmallTextPaint;
+            } else {
+                paint = mTextPaint;
+            }
+            c.drawText(label,(x0+x1)/2,(y0+y1)/2+5,paint);
+        } else {
+            c.drawText(label,(3*x0+x1)/4, (4*y1+y0)/5,mTextPaint);
+            c.drawText(altlabel,(1*x0+4*x1)/5,(3*y0+1*y1)/4+5,mAltTextPaint);
         }
+    }
+
+
+    public void updateSize() {
+        mWidth = getWidth();
+        mHeight = getHeight();
+        forceDraw();
     }
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        updateSize(false);
-    }
-
-    @Override
-    public void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        if (mNeedsDraw) {
-            int w = canvas.getWidth(), h = canvas.getHeight();
-            Log.d(TAG, "drawsize " + w + " " + h);
-            if (mBuffer == null||mBuffer.getWidth() != w || mBuffer.getHeight() != h) { // || resized
-                mBuffer = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-                mCanvas = new Canvas(mBuffer);
-                Log.d(TAG, "canvassize " + mCanvas.getWidth() + " " + mCanvas.getHeight());
-            }
-            reDraw();
-            mNeedsDraw = false;
-        }
-        canvas.drawBitmap(mBuffer, 0, 0, null);
+        updateSize();
     }
 
     void forceDraw() {
-        mNeedsDraw = true;
+        //mNeedsDraw = true;
         invalidate();
     }
-
-    protected abstract void reDraw();
 
     protected void showPreview(String label, int state, int x, int y) {
         mPreviewView.setText(label);

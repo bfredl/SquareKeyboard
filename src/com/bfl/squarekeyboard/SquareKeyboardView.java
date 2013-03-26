@@ -30,8 +30,6 @@ public class SquareKeyboardView extends BaseKeyboardView {
     int mActiveDir = 0;
     int sweepTreshold = 50;
 
-
-
     public SquareKeyboardView(Context context) {
         super(context);
         construct();
@@ -93,36 +91,30 @@ public class SquareKeyboardView extends BaseKeyboardView {
     }
 
     @Override
-    protected void reDraw() {
-        Canvas c = mCanvas;
+    public void onDraw(Canvas c) {
         mColWidth = mWidth/ mCols;
-        //c.drawRect(0, 0, w, h, mBackgroundPaint);
-        drawGrid();
+        c.drawRect(0, 0, mWidth, mHeight, mBorderPaint);
+        //drawGrid(c);
         for(int i = 0; i < mRows; i++) {
            for(int j = 0; j < mCols; j++) {
-               drawKey(i,j);
+               drawKey(c,i,j);
            }
         }
     }
 
-    private void drawGrid() {
-        float w1 = (float)mWidth/mCols;
-        float h1 = mRowHeight;
-        for(int i = 0; i < mRows+1; i++) {
-            mCanvas.drawLine(0,i*h1,mWidth,i*h1,mBorderPaint);
-        }
-        for(int i = 0; i < mCols; i++) {
-            mCanvas.drawLine(i*w1,0,i*w1,mHeight,mBorderPaint);
-        }
-        mCanvas.drawLine(mWidth-1,0,mWidth-1,mHeight,mBorderPaint);
-    }
-
-    private void drawKey(int i, int j) {
+    private void drawKey(Canvas c, int i, int j) {
         // intervals inclusive [x0, x1]
-        int y0 = i*mRowHeight+mLineThickness;
-        int y1 = y0 + mRowHeight-mLineThickness ;
+        String label = mKeyboard.getKeyLabel(i,j,0);
+        String altlabel = mKeyboard.getKeyLabel(i,j,SquareKeyboard.SWIPE_DISPLAY);
         int x0 = j*mColWidth+mLineThickness;
-        int x1 = x0 + mColWidth-mLineThickness ;
+        int j2=j+1;
+        if( label.equals(" ")) {
+            while(j2<mCols && mKeyboard.getKeyLabel(i,j2,0).equals(" ")) 
+                j2++;
+        }
+        int x1 = j2*mColWidth;//-mLineThickness ;
+        int y0 = i*mRowHeight+mLineThickness;
+        int y1 = (i+1)*mRowHeight;//-mLineThickness ;
         x1 = Math.min(x1,mWidth-mLineThickness);
         Paint p;
         if(mActiveI == i && mActiveJ == j) {
@@ -133,21 +125,7 @@ public class SquareKeyboardView extends BaseKeyboardView {
             p = mBackgroundPaint;
         }
 
-        mCanvas.drawRect(x0,y0,x1,y1,p);
-        String label = mKeyboard.getKeyLabel(i,j,0);
-        String altlabel = mKeyboard.getKeyLabel(i,j,SquareKeyboard.SWIPE_DISPLAY);
-        if( altlabel.equals(label) || altlabel.equals("")) {
-            Paint paint;
-            if(label.length() > 2) {
-                paint = mSmallTextPaint;
-            } else {
-                paint = mTextPaint;
-            }
-            mCanvas.drawText(label,(x0+x1)/2,(y0+y1)/2+5,paint);
-        } else {
-            mCanvas.drawText(label,(3*x0+x1)/4, (4*y1+y0)/5,mTextPaint);
-            mCanvas.drawText(altlabel,(1*x0+4*x1)/5,(3*y0+1*y1)/4+5,mAltTextPaint);
-        }
+        drawKey(c,x0,x1,y0,y1,label,altlabel,p);
     }
 
     private void updatePreview() {
@@ -182,12 +160,15 @@ public class SquareKeyboardView extends BaseKeyboardView {
             mActiveDir = dir;
             updatePreview();
             if(oldI >= 0) {
-                drawKey(oldI,oldJ);
+                // FIXME maybe. Redrawing entire keyboard is probably a non-issue.
+                //drawKey(oldI,oldJ);
+                invalidate();
             }
             if(i >= 0) {
-                drawKey(i,j);
+                //drawKey(i,j);
+                invalidate();
             }
-            invalidate();
+            //invalidate();
         }
     }
 

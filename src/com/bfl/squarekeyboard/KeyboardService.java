@@ -13,16 +13,17 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.io.*;
 
-public class SquareKeyboardService extends InputMethodService 
+// FIXME: subclass this maybe?
+public class KeyboardService extends InputMethodService 
         implements SquareKeyboard.ActionListener {
     static final boolean DEBUG = false;
     
     
     private SquareKeyboard mKeyboard;
-    private SquareKeyboardView mView;
+    private BaseKeyboardView mView;
     
     private String mWordSeparators;
     
@@ -33,8 +34,10 @@ public class SquareKeyboardService extends InputMethodService
     @Override public void onCreate() {
         super.onCreate();
         mWordSeparators = getResources().getString(R.string.word_separators);
-        mKeyboard = new SquareKeyboard(this);
-        mKeyboard.loadFile("/sdcard/layout.txt");
+        if( new File("/sdcard/layout.txt").exists()) {
+            mKeyboard = new SquareKeyboard(this);
+            mKeyboard.loadFile("/sdcard/layout.txt");
+        }
     }
     
     /**
@@ -51,9 +54,16 @@ public class SquareKeyboardService extends InputMethodService
      * a configuration change.
      */
     @Override public View onCreateInputView() {
-        mView = (SquareKeyboardView) getLayoutInflater().inflate(
-                R.layout.input, null);
-        mView.setKeyboard(mKeyboard);
+        if(mKeyboard != null) {
+            mView = (SquareKeyboardView) getLayoutInflater().inflate(
+                    R.layout.input, null);
+            ((SquareKeyboardView)mView).setKeyboard(mKeyboard);
+        } else { 
+            mView = (ChordKeyboardView) getLayoutInflater().inflate(
+                    R.layout.chordinput, null);
+            // FIXME
+        }
+
         return mView;
     }
 
