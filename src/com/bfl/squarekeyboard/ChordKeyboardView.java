@@ -45,8 +45,8 @@ public class ChordKeyboardView extends BaseKeyboardView {
     private void construct() {
         mRows = 2;
         mCols = 5;
-        mRowHeight = 40;
-        mColWidth = 40;
+        mRowHeight = 50;
+        mColWidth = 50;
     }
 
     void setKeyboard(SquareKeyboard keyboard) {
@@ -67,18 +67,18 @@ public class ChordKeyboardView extends BaseKeyboardView {
     @Override
     public void updateSize() {
         super.updateSize();
-        mMidPaneX = mCols*mColWidth;
+        mMidPaneX = mCols*mColWidth+mLineThickness;
         mRightPaneX = mWidth - mMidPaneX;
     }
 
-    private int indexToId(int box, int col, int row) {
-        return mRows*(mCols*box+col)+row; // C order: key[box][[col][row]
+    private int indexToId(int box, int i, int j) {
+        return mRows*(mCols*box+j)+i; // C order: key[box][[col][row]
     }
 
     private int posToId(float x,float y) {
         if( x <= 1 || x >= mWidth -1 ) return -1;
         if( y <= 1 || y >= mWidth -1 ) return -1;
-        int row = (int) y/ mRowHeight;
+        int i = (int) y/ mRowHeight;
         int box;
         if( x < mMidPaneX) {
             box = 0;
@@ -89,14 +89,13 @@ public class ChordKeyboardView extends BaseKeyboardView {
             // return midPaneId(x,y);
             return -2;
         }
-        int col = (int) (x / mColWidth);
-        return indexToId(box,col,row);
+        int j = (int) (x / mColWidth);
+        return indexToId(box,i,j);
     }
 
 
     @Override
     public void onDraw(Canvas c) {
-        mColWidth = mWidth/ mCols;
         c.drawRect(0, 0, mWidth, mHeight, mBorderPaint);
         //drawGrid(c);
         for(int box =0; box < BOXES; box++) {
@@ -139,6 +138,7 @@ public class ChordKeyboardView extends BaseKeyboardView {
     @Override
     void onTouchUp(int ptrId,float x, float y) {
         onTouchMove(ptrId,-1f,-1f);
+        int id = posToId(x,y);
     }
 
 
