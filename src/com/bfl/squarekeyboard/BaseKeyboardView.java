@@ -154,26 +154,41 @@ public abstract class BaseKeyboardView extends View {
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         int a = ev.getActionMasked();
-        String action;
-        if( a == ev.ACTION_DOWN) {
-            action  = "DOWN";
-            onTouchDown(0,ev.getX(),ev.getY());
-        } else if(a == ev.ACTION_MOVE) {
-            action = "MOVE";
+        String action = null;
+        if(a == ev.ACTION_MOVE) {
+            //action = "MOVE";
+            //FIXME
             onTouchMove(0,ev.getX(),ev.getY());
-        } else if(a == ev.ACTION_UP) {
-            action = "UP";
-            onTouchUp(0,ev.getX(),ev.getY());
         } else if(a == ev.ACTION_CANCEL) {
             action = "CANCEL";
             onTouchUp(0,-1f,-1f);
         } else if(a == ev.ACTION_OUTSIDE) {
             action = "OUTSIDE";
         } else {
-            return false;
+            int idx =ev.getActionIndex() ; 
+            int id = ev.getPointerId(idx);
+            float x = ev.getX(idx);
+            float y = ev.getY(idx);
+            if( a == ev.ACTION_DOWN) {
+                action  = "DOWN";
+                onTouchDown(id,x,y);
+            } else if( a == ev.ACTION_POINTER_DOWN) {
+                action  = "PTR_DOWN";
+                onTouchDown(id,x,y);
+            } else if(a == ev.ACTION_UP) {
+                action = "UP";
+                onTouchUp(id,x,y);
+            } else if( a == ev.ACTION_POINTER_UP) {
+                action  = "PTR_UP";
+                onTouchUp(id,x,y);
+            } else {
+                return false;
+            }
+            if(action != null) {
+                Log.d(TAG, "touch " + action + " " + id + " " + x+ " " + y);
+            }
         }
 
-        //Log.d(TAG, "touch " + action + " " + ev.getX() + " " + ev.getY());
         return true;
     }
     // no MyVerySpecialAbstractTouchGestureListenerInterface for you...

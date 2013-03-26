@@ -26,6 +26,9 @@ public class ChordKeyboardView extends BaseKeyboardView {
     int mMidPaneX, mRightPaneX;
     private final int BOXES =2;
 
+    // move this to ChordKeyboard when implemented 
+    SquareKeyboard.ActionListener mListener;
+
 
     public ChordKeyboardView(Context context) {
         super(context);
@@ -47,6 +50,10 @@ public class ChordKeyboardView extends BaseKeyboardView {
         mCols = 5;
         mRowHeight = 50;
         mColWidth = 50;
+    }
+
+    void setListener_Temporary(SquareKeyboard.ActionListener l) {
+        this.mListener = l;
     }
 
     void setKeyboard(SquareKeyboard keyboard) {
@@ -133,12 +140,14 @@ public class ChordKeyboardView extends BaseKeyboardView {
     @Override
     void onTouchMove(int ptrId,float x, float y) {
         int id = posToId(x,y);
+        showPreview(String.format("%d",id),0,mWidth/2,mHeight/2);
     }
 
     @Override
     void onTouchUp(int ptrId,float x, float y) {
         onTouchMove(ptrId,-1f,-1f);
         int id = posToId(x,y);
+        mListener.onText(String.format("#%d\n",id));
     }
 
 

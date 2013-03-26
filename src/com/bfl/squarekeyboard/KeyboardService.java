@@ -62,6 +62,7 @@ public class KeyboardService extends InputMethodService
             mView = (ChordKeyboardView) getLayoutInflater().inflate(
                     R.layout.chordinput, null);
             // FIXME
+            ((ChordKeyboardView)mView).setListener_Temporary(this);
         }
 
         return mView;
