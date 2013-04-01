@@ -14,6 +14,7 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.util.TypedValue;
 import android.content.res.Resources;
+import java.util.*;
 
 public class ChordKeyboardView extends BaseKeyboardView {
 
@@ -29,6 +30,8 @@ public class ChordKeyboardView extends BaseKeyboardView {
     // move this to ChordKeyboard when implemented 
     SquareKeyboard.ActionListener mListener;
 
+    
+    Map<Integer,Sequence> mTouchSequences = new HashMap<Integer,Sequence>();
 
     public ChordKeyboardView(Context context) {
         super(context);
@@ -116,7 +119,7 @@ public class ChordKeyboardView extends BaseKeyboardView {
 
     private void drawKey(Canvas c, int box, int i, int j) {
         // intervals inclusive [x0, x1]
-        String label = String.valueOf(indexToId(box,i,j));
+        String label = String.valueOf(keyName(indexToId(box,i,j)));
         String altlabel = "";
         int boxX = (box == 1) ? mRightPaneX : 0;
         float x0 = boxX+j*mColWidth+mLineThickness;
@@ -133,22 +136,73 @@ public class ChordKeyboardView extends BaseKeyboardView {
 
     @Override
     void onTouchDown(int ptrId, float x, float y) {
+        int key = posToId(x,y);
+        mTouchSequences.put(ptrId, new Sequence(key));
         onTouchMove(ptrId, x, y);
     }
 
 
     @Override
     void onTouchMove(int ptrId,float x, float y) {
-        int id = posToId(x,y);
-        showPreview(String.format("%d",id),0,mWidth/2,mHeight/2);
+        int key = posToId(x,y);
+        Sequence seq = mTouchSequences.get(ptrId);
+        if(seq == null) 
+            return;
+        seq.curKey = key;
+        invalidate();
+        showPreview(describeChord(),0,mWidth/2,mHeight/2);
     }
 
     @Override
     void onTouchUp(int ptrId,float x, float y) {
-        onTouchMove(ptrId,-1f,-1f);
         int id = posToId(x,y);
-        mListener.onText(String.format("#%d\n",id));
+        Sequence seq = mTouchSequences.get(ptrId);
+        if(seq == null) 
+            return;
+        mListener.onText("#"+describeChord()+"\n");
+        mTouchSequences.remove(ptrId);
+        showPreview(describeChord(),0,mWidth/2,mHeight/2);
     }
+
+
+    private static class Sequence {
+        int startKey;
+        int curKey;
+        boolean dead;
+        Sequence(int k) {
+            curKey = startKey = k;
+        }
+    }
+
+    String describeChord() {
+        SortedSet<Integer> starts = new TreeSet<Integer>();
+        SortedSet<Integer> hovers = new TreeSet<Integer>();
+        for(Sequence s : mTouchSequences.values()) {
+            if(s.startKey >= 0) {
+                starts.add(s.startKey);
+            }
+            if(s.curKey >= 0) {
+                hovers.add(s.curKey);
+            }
+        }
+        hovers.removeAll(starts);
+        StringBuilder desc = new StringBuilder();
+        for(int s: starts) {
+            desc.append(keyName(s));
+        }
+        if(!hovers.isEmpty()) {
+            desc.append("/");
+            for(int h: hovers) {
+                desc.append(keyName(h));
+            }
+        }
+        return desc.toString();
+    }
+
+    char keyName(int keyId) {
+        return (char)('a' + keyId);
+    }
+
 
 
 }

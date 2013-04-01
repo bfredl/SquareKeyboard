@@ -42,6 +42,7 @@ public class SquareKeyboard {
     // modified by swipe
     static final int KEYSTATE_SWIPED = 3;
 
+    static final int KEYCODE_CHANGE_MODE = -1072;
 
     protected class Layout {
         Key[][] map;
@@ -90,6 +91,10 @@ public class SquareKeyboard {
     }
 
     protected void setState(String newState) {
+        if(newState.equals("*CHORD")) {
+            mListener.changeMode();
+            return;
+        }
         mState = mStates.get(newState);
         mActiveDeadKey = -1;
         mDeadLayout = null;
@@ -251,6 +256,8 @@ public class SquareKeyboard {
             key = new SpecialKey("Esc",new KeyEvent(ACTION_DOWN, 	KEYCODE_ESCAPE));
         } else if( code.matches("S[0-9]+")) {
             key = new MetaKeyPlaceholder(Integer.parseInt(code.substring(1)));
+        } else if( code == "CHANGE" ) {
+            key = new StateKey("CHORD","*CHORD",false);
         } else {
             throw new RuntimeException("INvalid code: " + code);
         }
@@ -334,6 +341,7 @@ public class SquareKeyboard {
         void onKey(char ch);
         void onText(CharSequence text);
         void onSpecialKey(int keyCode, KeyEvent event);
+        void changeMode();
     }
 
     void setSize(int rows, int cols) {

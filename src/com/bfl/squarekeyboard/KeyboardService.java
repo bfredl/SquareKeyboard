@@ -21,6 +21,7 @@ public class KeyboardService extends InputMethodService
         implements SquareKeyboard.ActionListener {
     static final boolean DEBUG = false;
     
+    boolean mChorded = false;
     
     private SquareKeyboard mKeyboard;
     private BaseKeyboardView mView;
@@ -54,7 +55,7 @@ public class KeyboardService extends InputMethodService
      * a configuration change.
      */
     @Override public View onCreateInputView() {
-        if(mKeyboard != null) {
+        if(mKeyboard != null && !mChorded) {
             mView = (SquareKeyboardView) getLayoutInflater().inflate(
                     R.layout.input, null);
             ((SquareKeyboardView)mView).setKeyboard(mKeyboard);
@@ -344,6 +345,11 @@ public class KeyboardService extends InputMethodService
     public void onSpecialKey(int keyCode, KeyEvent event) {
         getCurrentInputConnection().sendKeyEvent(event);
         // handle backspace etc here
+    }
+
+    public void changeMode() {
+        mChorded = !mChorded;
+        setInputView(onCreateInputView()); //XXX
     }
     
     public void setSuggestions(List<String> suggestions, boolean completions,

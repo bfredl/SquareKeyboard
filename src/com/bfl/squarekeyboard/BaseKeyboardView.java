@@ -157,8 +157,9 @@ public abstract class BaseKeyboardView extends View {
         String action = null;
         if(a == ev.ACTION_MOVE) {
             //action = "MOVE";
-            //FIXME
-            onTouchMove(0,ev.getX(),ev.getY());
+            for(int i = 0; i < ev.getPointerCount(); i++) {
+                onTouchMove(ev.getPointerId(i),ev.getX(i),ev.getY(i));
+            }
         } else if(a == ev.ACTION_CANCEL) {
             action = "CANCEL";
             onTouchUp(0,-1f,-1f);

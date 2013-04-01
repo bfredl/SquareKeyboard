@@ -24,7 +24,7 @@ layout sym {
 }
 
 layout downup {
-    "sin(" "cos(" "exp(" "sqrt(" "log(" "lambda "  
+    "sin(" "cos(" "exp(" "sqrt(" "log(" "lambda "  CHANGE
 }
 
 
